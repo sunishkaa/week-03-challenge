@@ -1,0 +1,96 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r}
+library(tidyverse)
+library(sjmisc)
+library(ggplot2)
+library(skimr)
+library(kableExtra)
+```
+
+Exercise 3: Explore and Wrangle Data
+
+Questions 1, 2, 3:
+
+```{r}
+f = "https://raw.githubusercontent.com/difiore/ada-2022-datasets/main/data-wrangling.csv"
+d= read_csv(f, col_names = TRUE)
+bsd = d$Body_mass_male_mean/d$Body_mass_female_mean
+sex_ratio = d$AdultFemale/d$AdultMales
+radius = sqrt(pi/d$HomeRange_km2)
+diameter = 2*radius
+di = d$DayLength_km/diameter
+
+```
+
+Question 4:Plot the relationship between day range length and time spent moving, for these primate species overall and by family.
+
+```{r}
+ggplot(data = d, aes(x = DayLength_km, y = Move))+
+  geom_point(na.rm = TRUE) 
+
+ggplot(data = d, aes(x = DayLength_km, y = Move))+
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~Family)
+
+```
+
+Question 5: Plot the relationship between day range length and time group size, overall and by family. 
+
+```{r}
+ggplot(data = d, aes(x = DayLength_km, y = MeanGroupSize))+
+  geom_point(na.rm = TRUE) 
+
+ggplot(data = d, aes(x = DayLength_km, y = MeanGroupSize))+
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~Family)
+```
+
+Question 6: Plot the relationship between body size dimorphism and canine size dimorphism overall and by family.
+
+```{r}
+ggplot(data = d, aes(x = bsd, y = Canine_Dimorphism))+
+  geom_point(na.rm = TRUE) 
+
+ggplot(data = d, aes(x = bsd, y = Canine_Dimorphism))+
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~Family)
+
+```
+
+
+Question 7:
+
+```{r}
+
+d2 = mutate(d, diet_strategy = case_when(
+  Fruit >= 50 ~ "frugivore",
+  Leaves >= 50 ~ "folivore",
+  Fruit < 50 & Leaves < 50 ~ "omnivore"
+))
+
+ggplot(d2 %>% filter(!is.na(diet_strategy)), aes(x=diet_strategy, y=MeanGroupSize))+
+  geom_boxplot()
+
+```
+
+Question 8:
+```{r}
+d3 = d %>% 
+  mutate("Binomial" =paste(Genus, Species, sep=" ")) %>% 
+  select(Binomial, Family, Genus, Brain_Size_Species_Mean, Body_mass_male_mean, Body_mass_female_mean) %>% 
+  group_by(Family) %>% 
+  summarise(avg1 = mean(Brain_Size_Species_Mean, na.rm = TRUE),
+            avg2 = mean(Body_mass_male_mean, na.rm = TRUE),
+            na.rm = TRUE) %>% 
+  arrange(avg1)
+d3
+```
+
